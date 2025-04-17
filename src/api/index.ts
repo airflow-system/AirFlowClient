@@ -33,4 +33,18 @@ export const getTrip = (tripId: string) => {
   return api.get(`/trip/${tripId}`);
 };
 
+export const getSchedule = async (userId: string, truckId: string, token: string) => {
+    const res =  await api.get('/driverassignment',{
+      headers: {
+        'x-token': token,
+      },
+      params: {
+        userId,
+        truckId,
+      },
+    });
+
+    return res.data.assignments;
+  };
+
 export default api;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,24 @@ import {
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import styles from '../styles/styles';
+import { getSchedule } from '../api';
+
+interface Assignment {
+  id: string;
+  company_name: string;
+  dispatcher_name: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  task_type: string;
+  flight_number: string;
+  pickup_time: string;
+  priority: string;
+  trucker_name: string;
+  truck_id: string;
+  desination:string;
+}
 
 interface Task {
     id: number;
@@ -62,21 +80,38 @@ interface Task {
 
 const taskListScreen = ({ navigation }: any) => {
 
-    function handleTaskSelect(task: Task): void {
+    const [assignments, setAssignments] = useState<Assignment[]>([]);
+
+    useEffect(() => {
+      const fetchAssignments = async () => {
+        try {
+          const res = await getSchedule('jen-axe', '300561', 'test');
+          setAssignments(res);
+        } catch (error) {
+          console.error('Failed to fetch assignments:', error);
+        }
+      };
+  
+      fetchAssignments();
+    }, []);
+
+
+
+    function handleTaskSelect(assignment: Assignment): void {
       navigation.navigate('TaskDetailScreen',{
-        id: task.id,
-        type: task.type,
-        location: task.location,
-        destination: task.location,
-        pickupTime: task.pickupTime,
-        completionTime: task.completionTime,
-        cargo: task.cargo,
-        priority: task.priority,
-        dispatcher: task.dispatcher,
-        dispatcherContact: task.dispatcherContact,
-        parkingLot: task.parkingLot,
-        dockingSpot: task.dockingSpot,
-        recommendedSpeed: task.recommendedSpeed
+        id: assignment.id,
+        type: assignment.task_type,
+        location: assignment.location,
+        destination: 'Unavailable',
+        pickupTime: assignment.pickup_time,
+        completionTime: 'Unavailable',
+        cargo: 'Unavailable',
+        priority: assignment.priority,
+        dispatcher: assignment.dispatcher_name,
+        dispatcherContact: 'Unavailable',
+        parkingLot: 'Unavailable',
+        dockingSpot: 'Unavailable',
+        recommendedSpeed: 'Unavailable'
       });
     }
 
@@ -92,19 +127,19 @@ const taskListScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}><Text style={styles.headerTitle}>My Delivery Blocks</Text></View>
       <ScrollView style={styles.scrollContent}>
-        {tasks.map(task => (
+        {assignments.map(task => (
           <TouchableOpacity key={task.id} style={styles.card} onPress={() => handleTaskSelect(task)}>
             <View style={styles.rowBetween}>
-              <View style={[styles.iconCircle, task.type === 'Pickup' ? styles.green : styles.blue]}>
-                <Feather name={task.type === 'Pickup' ? 'package' : 'truck'} size={20} color={task.type === 'Pickup' ? '#059669' : '#2563EB'} />
+              <View style={[styles.iconCircle, task.task_type === 'Pickup' ? styles.green : styles.blue]}>
+                <Feather name={task.task_type === 'Pickup' ? 'package' : 'truck'} size={20} color={task.task_type === 'Pickup' ? '#059669' : '#2563EB'} />
               </View>
-              <Text style={styles.taskType}>{task.type}</Text>
+              <Text style={styles.taskType}>{task.task_type}</Text>
               <Feather name="arrow-right" size={20} color="#9CA3AF" />
             </View>
             <Text style={styles.label}>From</Text>
-            <Text style={styles.value}>{task.location}</Text>
+            <Text style={styles.value}>{task.location.latitude}</Text>
             <Text style={styles.label}>To</Text>
-            <Text style={styles.value}>{task.destination}</Text>
+            <Text style={styles.value}>{task.desination}</Text>
             <View style={styles.timeRow}>
               <View style={styles.timeItem}><Feather name="clock" size={16} color="#6B7280" /><Text style={styles.timeText}>Pickup: {task.pickupTime}</Text></View>
               <View style={styles.timeItem}><Feather name="clock" size={16} color="#6B7280" /><Text style={styles.timeText}>Complete: {task.completionTime}</Text></View>
